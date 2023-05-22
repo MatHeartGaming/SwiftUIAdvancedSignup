@@ -19,6 +19,12 @@ struct SignupView: View {
     @State private var showProfileView = false
     @State private var signupToggle = true
     @State private var rotationAngle = 0.0
+    @State private var signInWithAppleObject = SignInWithAppleObject()
+    @State private var fadeToggle : Bool = true
+    
+    @State private var showAlertView : Bool = false
+    @State private var alertTitle : String = ""
+    @State private var alertMessage : String = ""
     
     //Animations
     @State private var emailIconBounce = false
@@ -32,6 +38,12 @@ struct SignupView: View {
                 .resizable()
                 .aspectRatio(contentMode: .fill)
                 .edgesIgnoringSafeArea(.all)
+                .opacity(fadeToggle ? 1.0 : 0.0)
+            
+            Color("secondaryBackground")
+                .edgesIgnoringSafeArea(.all)
+                .opacity(fadeToggle ? 0.0 : 1.0)
+            
             VStack {
                 VStack(alignment: .leading, spacing: 16) {
                     Text(signupToggle ? "Sign up" : "Sign in")
@@ -137,6 +149,14 @@ struct SignupView: View {
                     
                     VStack(alignment: .leading, spacing: 16) {
                         Button {
+                            withAnimation(.easeInOut(duration: 0.35)) {
+                                fadeToggle.toggle()
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                                    withAnimation(.easeInOut(duration: 0.35)) {
+                                        fadeToggle.toggle()
+                                    }
+                                }
+                            }
                             withAnimation(.easeInOut(duration: 0.7)) {
                                 signupToggle.toggle()
                                 self.rotationAngle += 180
@@ -155,7 +175,7 @@ struct SignupView: View {
                         
                         if !signupToggle {
                             Button {
-                                print("Send reset password email")
+                                sendPasswordResetEmail()
                             } label: {
                                 HStack(spacing: 4) {
                                     Text("Forgot password?")
@@ -166,6 +186,20 @@ struct SignupView: View {
                                 }
                             }
                             
+                            Rectangle()
+                                .frame(height: 1)
+                                .foregroundColor(.white.opacity(0.1))
+                            
+                            Button {
+                                print("Apple")
+                                signInWithAppleObject.signInWithApple()
+                            } label: {
+                                SignInWithAppleButton()
+                                    .frame(height: 50)
+                                    .cornerRadius(16)
+                            }
+
+                            
                         }
                         
                     }
@@ -174,6 +208,17 @@ struct SignupView: View {
                 .padding(20)
             }
             .rotation3DEffect(.degrees(rotationAngle), axis: (x: 0, y: 1, z: 0))
+            .alert(alertTitle, isPresented: $showAlertView, actions: {
+                Button {
+                    withAnimation {
+                        showAlertView = false
+                    }
+                } label: {
+                    Text("OK")
+                }
+            }, message: {
+                Text(alertMessage)
+            })
             .background(
                 RoundedRectangle(cornerRadius: 30)
                     .stroke(.white.opacity(0.2))
@@ -196,20 +241,42 @@ struct SignupView: View {
         if signupToggle{
             Auth.auth().createUser(withEmail: email, password: password) {result, error in
                 guard error == nil else {
+                    self.alertTitle = "Uh-Oh!"
+                    self.alertMessage = error!.localizedDescription
+                    self.showAlertView = true
                     print(error!.localizedDescription)
                     return
                 }
-                
                 print("User signed up!")
             }
         } else {
             Auth.auth().signIn(withEmail: email, password: password) {result, error in
                 guard error == nil else {
+                    self.alertTitle = "Uh-Oh!"
+                    self.alertMessage = error!.localizedDescription
+                    self.showAlertView = true
                     print(error!.localizedDescription)
                     return
                 }
                 print("User signed in")
             }
+        }
+    }
+    
+    func sendPasswordResetEmail() {
+        Auth.auth().sendPasswordReset(withEmail: email) {error in
+            guard error == nil else {
+                self.alertTitle = "Uh-Oh!"
+                self.alertMessage = error!.localizedDescription
+                self.showAlertView = true
+                print("Error resetting password: \(error!.localizedDescription)")
+                return
+            }
+            
+            self.alertTitle = "Password email reset sent"
+            self.alertMessage = "Check your inbox for an email to reset your password."
+            self.showAlertView = true
+            print("Password email reset sent")
         }
     }
     

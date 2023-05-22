@@ -10,6 +10,9 @@ import Firebase
 
 @main
 struct SwiftUIAdvancedCourseApp: App {
+    
+    //@UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    
     let persistenceController = PersistenceController.shared
     
     init() {
