@@ -30,6 +30,10 @@ struct SignupView: View {
     @State private var emailIconBounce = false
     @State private var passwordIconBounce = false
     
+    //MARK: CoreData stuff
+    @Environment(\.managedObjectContext) private var viewContext
+    @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Account.userSince, ascending: true)], animation: .default) private var savedAccounts : FetchedResults<Account>
+    
     private let generator = UISelectionFeedbackGenerator()
     
     var body: some View {
@@ -41,6 +45,7 @@ struct SignupView: View {
                 .opacity(fadeToggle ? 1.0 : 0.0)
             
             Color("secondaryBackground")
+                .edgesIgnoringSafeArea(.all)
                 .edgesIgnoringSafeArea(.all)
                 .opacity(fadeToggle ? 0.0 : 1.0)
             
@@ -56,7 +61,7 @@ struct SignupView: View {
                     
                     HStack(spacing: 12) {
                         TextFieldIcon(iconName: "envelope.open.fill",
-                                      currentlyEditing: $editingEmailTextfield)
+                                      currentlyEditing: $editingEmailTextfield, passesImage: .constant(nil))
                         .scaleEffect(emailIconBounce ? 1.2 : 1)
                         
                         TextField("Email", text: $email) { isEditing in
@@ -92,7 +97,7 @@ struct SignupView: View {
                     
                     HStack(spacing: 12) {
                         
-                        TextFieldIcon(iconName: "key.fill", currentlyEditing: $editingPasswordTextfield)
+                        TextFieldIcon(iconName: "key.fill", currentlyEditing: $editingPasswordTextfield, passesImage: .constant(nil))
                             .scaleEffect(passwordIconBounce ? 1.2 : 1)
                         
                         SecureField("Password", text: $password)
@@ -130,9 +135,7 @@ struct SignupView: View {
                     }
                     .onAppear{
                         Auth.auth().addStateDidChangeListener { auth, user in
-                            if user != nil {
-                                showProfileView = true
-                            }
+                            self.saveToCoreData(user: user)
                         }
                     }
                     
@@ -232,9 +235,10 @@ struct SignupView: View {
             .padding(.horizontal)
             .rotation3DEffect(.degrees(rotationAngle), axis: (x: 0, y: 1, z: 0))
         }
-        /*.fullScreenCover(isPresented: $showProfileView) {
-         ProfileView()
-         }*/
+        .fullScreenCover(isPresented: $showProfileView) {
+            ProfileView()
+                .environment(\.managedObjectContext, self.viewContext)
+         }
     }
     
     func signup() {
@@ -258,6 +262,7 @@ struct SignupView: View {
                     print(error!.localizedDescription)
                     return
                 }
+                showProfileView.toggle()
                 print("User signed in")
             }
         }
@@ -277,6 +282,37 @@ struct SignupView: View {
             self.alertMessage = "Check your inbox for an email to reset your password."
             self.showAlertView = true
             print("Password email reset sent")
+        }
+    }
+    
+    func saveToCoreData(user : User?) {
+        if let currentUser = user {
+            if savedAccounts.isEmpty {
+                //Add data to Core Data
+                let userDataToSave = Account(context: viewContext)
+                userDataToSave.name = currentUser.displayName
+                userDataToSave.bio = nil
+                userDataToSave.userID = currentUser.uid
+                userDataToSave.numberOfCertificates = 0
+                userDataToSave.proMember = false
+                userDataToSave.twitterHandle = nil
+                userDataToSave.website = nil
+                userDataToSave.profileImage = nil
+                userDataToSave.userSince = Date()
+                do {
+                    try viewContext.save()
+                    DispatchQueue.main.async {
+                        showProfileView.toggle()
+                    }
+                } catch let error {
+                    self.alertTitle = "Could not create an account"
+                    self.alertMessage = error.localizedDescription
+                    self.showAlertView = true
+                }
+                
+            } else {
+                showProfileView.toggle()
+            }
         }
     }
     

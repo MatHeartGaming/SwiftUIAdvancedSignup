@@ -6,10 +6,23 @@
 //
 
 import SwiftUI
+import FirebaseAuth
+import CoreData
 
 struct ProfileView: View {
     
+    @Environment(\.presentationMode) var presentationMode
     @State private var showLoader : Bool = false
+    @State private var showSettingsView : Bool = false
+    
+    @Environment(\.managedObjectContext) private var viewContext
+    @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Account.userSince, ascending: true)], predicate: NSPredicate(format: "userID == %@", Auth.auth().currentUser?.uid ?? ""), animation: .default) private var savedAccounts : FetchedResults<Account>
+    
+    @State private var currentAccount : Account?
+    
+    //To update the view
+    @State var updater = true
+    
     
     var body: some View {
         ZStack {
@@ -22,20 +35,25 @@ struct ProfileView: View {
             VStack {
                 VStack(alignment: .leading, spacing: 16) {
                     HStack(spacing: 16) {
-                        ZStack {
-                            Circle()
-                                .foregroundColor(Color("pink-gradient-1"))
-                                .frame(width: 66, height: 66, alignment: .center)
-                            
-                            Image(systemName: "person.fill")
-                                .foregroundColor(.white)
-                                .font(.system(size: 24, weight: .medium, design: .rounded))
-                            
+                        if currentAccount?.profileImage != nil {
+                            GradientProfilePictureView(profilePicture: UIImage(data: currentAccount!.profileImage!)!)
+                                .frame(width: 66, height: 66)
+                        } else {
+                            ZStack {
+                                Circle()
+                                    .foregroundColor(Color("pink-gradient-1"))
+                                    .frame(width: 66, height: 66, alignment: .center)
+                                
+                                Image(systemName: "person.fill")
+                                    .foregroundColor(.white)
+                                    .font(.system(size: 24, weight: .medium, design: .rounded))
+                                
+                            }
+                            .frame(width: 66, height: 66, alignment: .center)
                         }
-                        .frame(width: 66, height: 66, alignment: .center)
                         
                         VStack(alignment: .leading) {
-                            Text("Matteo Buompastore")
+                            Text(currentAccount?.name ?? "No Name")
                                 .foregroundColor(.white)
                                 .font(.title2.bold())
                                 
@@ -44,12 +62,15 @@ struct ProfileView: View {
                                 .font(.footnote)
                         }
                         
+                        
                         Spacer()
                         
                         Button {
-                            print("Segue to settings")
+                            withAnimation {
+                                showSettingsView.toggle()
+                            }
                         } label: {
-                            TextFieldIcon(iconName: "gearshape.fill", currentlyEditing: .constant(true))
+                            TextFieldIcon(iconName: "gearshape.fill", currentlyEditing: .constant(true), passesImage: .constant(nil))
                         }
                         
 
@@ -59,31 +80,37 @@ struct ProfileView: View {
                         .frame(height: 1)
                         .foregroundColor(.white.opacity(0.1))
                     
-                    Text("Instructor at Design+Code")
+                    Text(currentAccount?.bio ?? "No Bio")
                         .foregroundColor(.white)
                         .font(.title2.bold())
                     
-                    Label("Awarded with 10 certificates since January 2020", systemImage: "calendar")
-                        .foregroundColor(.white.opacity(0.7))
-                        .font(.footnote)
+                    if currentAccount?.numberOfCertificates != 0 {
+                        Label("Awarded with \(currentAccount?.numberOfCertificates ?? 0) certificates since \(dateFormatter(date: currentAccount?.userSince ?? Date()))", systemImage: "calendar")
+                            .foregroundColor(.white.opacity(0.7))
+                            .font(.footnote)
+                        
+                    }
                     
                     Rectangle()
                         .frame(height: 1)
                         .foregroundColor(.white.opacity(0.1))
                     
+                    
                     HStack(spacing: 16) {
-                        Image("Twitter")
-                            .resizable()
-                            .foregroundColor(.white.opacity(0.7))
-                            .frame(width: 24, height: 24, alignment: .center)
-
+                        if(currentAccount?.twitterHandle != nil){
+                            Image("Twitter")
+                                .resizable()
+                                .foregroundColor(.white.opacity(0.7))
+                                .frame(width: 24, height: 24, alignment: .center)
+                        }
                         
-                        Image(systemName: "link")
-                            .resizable()
-                            .foregroundColor(.white.opacity(0.7))
-                            .frame(width: 24, height: 24, alignment: .center)
+                        if(currentAccount?.website != nil){
+                            Image(systemName: "link")
+                                .resizable()
+                                .foregroundColor(.white.opacity(0.7))
+                                .frame(width: 24, height: 24, alignment: .center)
+                        }
 
-                        
                         Text("desingcode.io")
                             .foregroundColor(.white.opacity(0.7))
                             .font(.footnote)
@@ -91,10 +118,12 @@ struct ProfileView: View {
                 }
                 .padding()
                 
-                GradientButton(buttonTitle: "Purchase Lifetime Pro Plan") {
-                    print("IAP")
+                if currentAccount?.proMember == false {
+                    GradientButton(buttonTitle: "Purchase Lifetime Pro Plan") {
+                        print("IAP")
+                    }
+                    .padding(.horizontal)
                 }
-                .padding(.horizontal)
                 
                 Button {
                     print("Restore")
@@ -118,7 +147,8 @@ struct ProfileView: View {
                 Spacer()
                 
                 Button {
-                    print("Sign out")
+                    print("Signing out")
+                    signOut()
                 } label: {
                     Image(systemName: "arrow.turn.up.forward.iphone.fill")
                         .foregroundColor(.white)
@@ -143,8 +173,63 @@ struct ProfileView: View {
             }
             
         }
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(updater ? .dark : .dark) //MARK: Trick to force the refresh of view with the new infos
+        .sheet(isPresented: $showSettingsView) {
+            SettingsView()
+                .environment(\.managedObjectContext, viewContext)
+                .onDisappear {
+                    currentAccount = savedAccounts.first!
+                    updater.toggle() //MARK: Trick to force the refresh of view with the new infos
+                }
+        }
+        .onAppear {
+            self.currentAccount = savedAccounts.first
+            if currentAccount == nil {
+                readFromCoreData(user: Auth.auth().currentUser)
+            }
+        }
     }
+    
+    func readFromCoreData(user : User?) {
+        if let currentUser = user {
+            if savedAccounts.isEmpty {
+                //Add data to Core Data
+                let userDataToSave = Account(context: viewContext)
+                userDataToSave.name = currentUser.displayName
+                userDataToSave.bio = nil
+                userDataToSave.userID = currentUser.uid
+                userDataToSave.numberOfCertificates = 0
+                userDataToSave.proMember = false
+                userDataToSave.twitterHandle = nil
+                userDataToSave.website = nil
+                userDataToSave.profileImage = nil
+                userDataToSave.userSince = Date()
+                do {
+                    try viewContext.save()
+                    
+                } catch let error {
+                    print(error.localizedDescription)
+                }
+                
+            }
+        }
+    }
+    
+    func signOut() {
+        do {
+            try Auth.auth().signOut()
+            presentationMode.wrappedValue.dismiss()
+        } catch let error {
+            print("Error signing out: \(error.localizedDescription)")
+        }
+    }
+    
+    func dateFormatter(date : Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMMM yyyy"
+        return formatter.string(from: date)
+    }
+    
 }
 
 struct ProfileView_Previews: PreviewProvider {

@@ -24,6 +24,9 @@
 		FEA1DB7A2A1BB49800D8AA1D /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = FEA1DB792A1BB49800D8AA1D /* GoogleService-Info.plist */; };
 		FEA1DB7C2A1BB69D00D8AA1D /* SignInWithAppleButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA1DB7B2A1BB69D00D8AA1D /* SignInWithAppleButton.swift */; };
 		FEA1DB7E2A1BB79000D8AA1D /* SignInWithAppleObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA1DB7D2A1BB79000D8AA1D /* SignInWithAppleObject.swift */; };
+		FEDD5FF22A1C9FC1002330A2 /* GradientProfilePictureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEDD5FF12A1C9FC1002330A2 /* GradientProfilePictureView.swift */; };
+		FEDD5FF52A1CA594002330A2 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEDD5FF42A1CA594002330A2 /* SettingsView.swift */; };
+		FEDD5FF72A1CA6BC002330A2 /* GradientTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEDD5FF62A1CA6BC002330A2 /* GradientTextField.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -46,6 +49,9 @@
 		FEA1DB7B2A1BB69D00D8AA1D /* SignInWithAppleButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignInWithAppleButton.swift; sourceTree = "<group>"; };
 		FEA1DB7D2A1BB79000D8AA1D /* SignInWithAppleObject.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignInWithAppleObject.swift; sourceTree = "<group>"; };
 		FEA1DB7F2A1BBB4F00D8AA1D /* SwiftUIAdvancedCourse.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SwiftUIAdvancedCourse.entitlements; sourceTree = "<group>"; };
+		FEDD5FF12A1C9FC1002330A2 /* GradientProfilePictureView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GradientProfilePictureView.swift; sourceTree = "<group>"; };
+		FEDD5FF42A1CA594002330A2 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		FEDD5FF62A1CA6BC002330A2 /* GradientTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GradientTextField.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -80,9 +86,9 @@
 			isa = PBXGroup;
 			children = (
 				FEA1DB7F2A1BBB4F00D8AA1D /* SwiftUIAdvancedCourse.entitlements */,
+				FE56F78A2A1767D0003D9B91 /* SwiftUIAdvancedCourseApp.swift */,
 				FE784EBC2A177AEC00B93F1A /* Views */,
 				FE784EB72A176B5000B93F1A /* Helpers */,
-				FE56F78A2A1767D0003D9B91 /* SwiftUIAdvancedCourseApp.swift */,
 				FE56F78C2A1767D0003D9B91 /* SignupView.swift */,
 				FE784EC82A17D2FB00B93F1A /* ProfileView.swift */,
 				FE56F7932A1767D1003D9B91 /* Persistence.swift */,
@@ -117,10 +123,13 @@
 		FE784EBC2A177AEC00B93F1A /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				FEDD5FF12A1C9FC1002330A2 /* GradientProfilePictureView.swift */,
 				FE784EBD2A177B0C00B93F1A /* GradientText.swift */,
 				FE784EBF2A177B3F00B93F1A /* GradientButton.swift */,
 				FE784EC12A177B6700B93F1A /* TextFieldIcon.swift */,
 				FEA1DB7B2A1BB69D00D8AA1D /* SignInWithAppleButton.swift */,
+				FEDD5FF42A1CA594002330A2 /* SettingsView.swift */,
+				FEDD5FF62A1CA6BC002330A2 /* GradientTextField.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -202,6 +211,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FEDD5FF52A1CA594002330A2 /* SettingsView.swift in Sources */,
+				FEDD5FF22A1C9FC1002330A2 /* GradientProfilePictureView.swift in Sources */,
 				FEA1DB782A1BB3F100D8AA1D /* AppDelegate.swift in Sources */,
 				FE784EBA2A176B5000B93F1A /* VisualEffectBlur.swift in Sources */,
 				FE784EC02A177B3F00B93F1A /* GradientButton.swift in Sources */,
@@ -209,6 +220,7 @@
 				FEA1DB7C2A1BB69D00D8AA1D /* SignInWithAppleButton.swift in Sources */,
 				FE784EBE2A177B0C00B93F1A /* GradientText.swift in Sources */,
 				FE56F7972A1767D1003D9B91 /* SwiftUIAdvancedCourse.xcdatamodeld in Sources */,
+				FEDD5FF72A1CA6BC002330A2 /* GradientTextField.swift in Sources */,
 				FE56F7942A1767D1003D9B91 /* Persistence.swift in Sources */,
 				FE784EC22A177B6700B93F1A /* TextFieldIcon.swift in Sources */,
 				FE784EBB2A176B5000B93F1A /* ImagePicker.swift in Sources */,
@@ -347,6 +359,7 @@
 				DEVELOPMENT_TEAM = T3Y3F3RZUZ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SwiftUIAdvancedCourse/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "SwiftUI Advanced";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -379,6 +392,7 @@
 				DEVELOPMENT_TEAM = T3Y3F3RZUZ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SwiftUIAdvancedCourse/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "SwiftUI Advanced";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
